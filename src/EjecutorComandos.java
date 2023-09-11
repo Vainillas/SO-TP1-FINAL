@@ -13,7 +13,7 @@ public class EjecutorComandos {
 
     // java EjecutorComandos -s , < comandos.txt
 
-    public static void main(String[] args) { //TODO: Realizar la ejecución de cada comando en hilos diferentes
+    public static void main(String[] args) {
         String separator; // Valor por defecto
         if (args.length > 0 && args[0].equals("-s") && args.length > 1) {
             separator = args[1]; // Valor especificado por el usuario
