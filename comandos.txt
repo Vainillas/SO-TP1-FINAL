@@ -1,0 +1,5 @@
+cat /etc/passwd
+echo "Hola mundo"
+echo "Otro echo"
+sleep 100
+ls -l
