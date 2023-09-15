@@ -1,3 +1,6 @@
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
    maliberti
 */
 public class EjecutorComandos {
+
 
     // java EjecutorComandos -s , < comandos.txt
 
@@ -24,32 +28,25 @@ public class EjecutorComandos {
         Map<String, String> environmentVariables = new HashMap<>(System.getenv());
         // La variable HOSTNAME debe ser pasada con el valor “prueba”
         environmentVariables.put("HOSTNAME", "prueba");
-
         AtomicInteger commandCount = new AtomicInteger(0);
-
+        // Registrar manejadores de señales INT y TERM
+        Signal.handle(new Signal("INT"), sig -> {
+            System.out.println("Señal INT recibida. Terminando el programa.");
+            System.out.println("Cantidad de líneas leídas o comandos ejecutados: " + commandCount.get());
+            System.exit(1);
+        });
+        Signal.handle(new Signal("TERM"), sig -> {
+            System.out.println("Señal TERM recibida. Terminando el programa.");
+            System.out.println("Cantidad de líneas leídas o comandos ejecutados: " + commandCount.get());
+            System.exit(1);
+        });
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             String line;
 
-            CountDownLatch latch = new CountDownLatch(1); // Contador para esperar a que todos los hilos terminen
-            // Manejar señales INT y TERM
 
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                try {
-                    latch.await();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                System.out.println("Terminando programa por señal...");
-                System.out.println("Número de líneas leídas o comandos ejecutados: " + commandCount.get());
-                latch.countDown();
-            }));
 
-            /*Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.out.println("Esperando a que todos los hilos terminen...");
 
-                System.out.println("Programa terminado por señal.");
-            }));*/
 
             while ((line = reader.readLine()) != null) {
                 String[] commandParts = line.split(" ");
@@ -84,9 +81,6 @@ public class EjecutorComandos {
                         }
                     } catch (IOException | InterruptedException e) {
                         System.err.println("Error al ejecutar el comando: " + e.getMessage());
-                    } finally {
-                        latch.countDown(); // Decrementar el contador cuando el hilo termina
-                        //En teoría debería hacer que el programa no termine abruptamente, si no que espere a que todos los hilos terminen
                     }
                 });
                 commandThread.start();
